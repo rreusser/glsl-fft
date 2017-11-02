@@ -12,18 +12,18 @@ module.exports = function (regl) {
     frag: glsl(`
       precision highp float;
 
-      #pragma glslify: fft = require(../fft.glsl)
+      #pragma glslify: fft = require(../index.glsl)
 
       uniform sampler2D src;
-      uniform float resolution, subtransformSize;
+      uniform float size, subtransformSize;
       uniform bool horizontal, forward, normalize;
 
       void main () {
-        gl_FragColor = fft(src, resolution, subtransformSize, horizontal, forward, normalize);
+        gl_FragColor = fft(src, size, subtransformSize, horizontal, forward, normalize);
       }
     `),
     uniforms: {
-      resolution: regl.prop('resolution'),
+      size: regl.prop('size'),
       forward: regl.prop('forward'),
       subtransformSize: regl.prop('subtransformSize'),
       horizontal: regl.prop('horizontal'),

@@ -18,19 +18,19 @@ module.exports = function (regl) {
 
       varying vec2 uv;
       uniform sampler2D src;
-      uniform float resolution;
+      uniform float size;
       uniform float radius;
 
       void main () {
         vec4 col = texture2D(src, uv);
-        vec2 kxy = wavenumber(resolution);
+        vec2 kxy = wavenumber(size);
 
-        float r = radius / resolution;
+        float r = radius / size;
         gl_FragColor = col * exp(-dot(kxy, kxy) * r * r);
       }
     `),
     uniforms: {
-      resolution: regl.prop('resolution'),
+      size: regl.prop('size'),
       radius: regl.prop('radius'),
       src: regl.prop('input'),
     },

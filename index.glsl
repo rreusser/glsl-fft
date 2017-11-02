@@ -6,7 +6,7 @@ vec2 multiplyComplex (vec2 a, vec2 b) {
 
 vec4 fft (
   sampler2D src,
-  float resolution,
+  float size,
   float subtransformSize,
   bool horizontal,
   bool forward,
@@ -20,16 +20,16 @@ vec4 fft (
   vec4 odd = vec4(0.0);
 
   if (horizontal) {
-    even = texture2D(src, vec2(evenIndex + 0.5, gl_FragCoord.y) / resolution);
-    odd = texture2D(src, vec2(evenIndex + resolution * 0.5 + 0.5, gl_FragCoord.y) / resolution);
+    even = texture2D(src, vec2(evenIndex + 0.5, gl_FragCoord.y) / size);
+    odd = texture2D(src, vec2(evenIndex + size * 0.5 + 0.5, gl_FragCoord.y) / size);
   } else {
-    even = texture2D(src, vec2(gl_FragCoord.x, evenIndex + 0.5) / resolution);
-    odd = texture2D(src, vec2(gl_FragCoord.x, evenIndex + resolution * 0.5 + 0.5) / resolution);
+    even = texture2D(src, vec2(gl_FragCoord.x, evenIndex + 0.5) / size);
+    odd = texture2D(src, vec2(gl_FragCoord.x, evenIndex + size * 0.5 + 0.5) / size);
   }
 
   float res2;
   if (normalize) {
-    res2 = 1.0 / (resolution * resolution);
+    res2 = 1.0 / (size * size);
     even *= res2;
     odd *= res2;
   }

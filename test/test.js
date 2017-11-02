@@ -3,7 +3,7 @@ var transform = require('../transform');
 
 test('forward fft', function (t) {
   var fft = transform({
-    resolution: 8,
+    size: 32,
     input: 'a',
     ping: 'b',
     pong: 'c',
@@ -12,16 +12,16 @@ test('forward fft', function (t) {
   });
 
   t.deepEqual(fft, [
-    { forward: true, input: 'a', output: 'b', normalize: false, horizontal: true, subtransformSize: 2, resolution: 32 },
-    { forward: true, input: 'b', output: 'c', normalize: false, horizontal: true, subtransformSize: 4, resolution: 32 },
-    { forward: true, input: 'c', output: 'b', normalize: false, horizontal: true, subtransformSize: 8, resolution: 32 },
-    { forward: true, input: 'b', output: 'c', normalize: false, horizontal: true, subtransformSize: 16, resolution: 32 },
-    { forward: true, input: 'c', output: 'b', normalize: false, horizontal: true, subtransformSize: 32, resolution: 32 },
-    { forward: true, input: 'b', output: 'c', normalize: false, horizontal: false, subtransformSize: 2, resolution: 32 },
-    { forward: true, input: 'c', output: 'b', normalize: false, horizontal: false, subtransformSize: 4, resolution: 32 },
-    { forward: true, input: 'b', output: 'c', normalize: false, horizontal: false, subtransformSize: 8, resolution: 32 },
-    { forward: true, input: 'c', output: 'b', normalize: false, horizontal: false, subtransformSize: 16, resolution: 32 },
-    { forward: true, input: 'b', output: 'd', normalize: false, horizontal: false, subtransformSize: 32, resolution: 32 }
+    { forward: true, input: 'a', output: 'b', normalize: false, horizontal: true, subtransformSize: 2, size: 32 },
+    { forward: true, input: 'b', output: 'c', normalize: false, horizontal: true, subtransformSize: 4, size: 32 },
+    { forward: true, input: 'c', output: 'b', normalize: false, horizontal: true, subtransformSize: 8, size: 32 },
+    { forward: true, input: 'b', output: 'c', normalize: false, horizontal: true, subtransformSize: 16, size: 32 },
+    { forward: true, input: 'c', output: 'b', normalize: false, horizontal: true, subtransformSize: 32, size: 32 },
+    { forward: true, input: 'b', output: 'c', normalize: false, horizontal: false, subtransformSize: 2, size: 32 },
+    { forward: true, input: 'c', output: 'b', normalize: false, horizontal: false, subtransformSize: 4, size: 32 },
+    { forward: true, input: 'b', output: 'c', normalize: false, horizontal: false, subtransformSize: 8, size: 32 },
+    { forward: true, input: 'c', output: 'b', normalize: false, horizontal: false, subtransformSize: 16, size: 32 },
+    { forward: true, input: 'b', output: 'd', normalize: false, horizontal: false, subtransformSize: 32, size: 32 }
   ]);
 
   t.end();
@@ -29,7 +29,7 @@ test('forward fft', function (t) {
 
 test('inverse fft', function (t) {
   var fft = transform({
-    resolution: 32,
+    size: 32,
     input: 'a',
     ping: 'b',
     pong: 'c',
@@ -38,16 +38,16 @@ test('inverse fft', function (t) {
   });
 
   t.deepEqual(fft, [
-    { forward: false, input: 'a', output: 'b', normalize: true, horizontal: true, subtransformSize: 2, resolution: 32 },
-    { forward: false, input: 'b', output: 'c', normalize: false, horizontal: true, subtransformSize: 4, resolution: 32 },
-    { forward: false, input: 'c', output: 'b', normalize: false, horizontal: true, subtransformSize: 8, resolution: 32 },
-    { forward: false, input: 'b', output: 'c', normalize: false, horizontal: true, subtransformSize: 16, resolution: 32 },
-    { forward: false, input: 'c', output: 'b', normalize: false, horizontal: true, subtransformSize: 32, resolution: 32 },
-    { forward: false, input: 'b', output: 'c', normalize: false, horizontal: false, subtransformSize: 2, resolution: 32 },
-    { forward: false, input: 'c', output: 'b', normalize: false, horizontal: false, subtransformSize: 4, resolution: 32 },
-    { forward: false, input: 'b', output: 'c', normalize: false, horizontal: false, subtransformSize: 8, resolution: 32 },
-    { forward: false, input: 'c', output: 'b', normalize: false, horizontal: false, subtransformSize: 16, resolution: 32 },
-    { forward: false, input: 'b', output: 'd', normalize: false, horizontal: false, subtransformSize: 32, resolution: 32 }
+    { forward: false, input: 'a', output: 'b', normalize: true, horizontal: true, subtransformSize: 2, size: 32 },
+    { forward: false, input: 'b', output: 'c', normalize: false, horizontal: true, subtransformSize: 4, size: 32 },
+    { forward: false, input: 'c', output: 'b', normalize: false, horizontal: true, subtransformSize: 8, size: 32 },
+    { forward: false, input: 'b', output: 'c', normalize: false, horizontal: true, subtransformSize: 16, size: 32 },
+    { forward: false, input: 'c', output: 'b', normalize: false, horizontal: true, subtransformSize: 32, size: 32 },
+    { forward: false, input: 'b', output: 'c', normalize: false, horizontal: false, subtransformSize: 2, size: 32 },
+    { forward: false, input: 'c', output: 'b', normalize: false, horizontal: false, subtransformSize: 4, size: 32 },
+    { forward: false, input: 'b', output: 'c', normalize: false, horizontal: false, subtransformSize: 8, size: 32 },
+    { forward: false, input: 'c', output: 'b', normalize: false, horizontal: false, subtransformSize: 16, size: 32 },
+    { forward: false, input: 'b', output: 'd', normalize: false, horizontal: false, subtransformSize: 32, size: 32 }
   ]);
 
   t.end();

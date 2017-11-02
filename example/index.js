@@ -37,7 +37,7 @@ function start (regl, mist) {
   const filter = require('./filter')(regl);
 
   apply(fft({
-    resolution: size,
+    size: size,
     input: img,
     ping: fbos[0],
     pong: fbos[1],
@@ -46,7 +46,7 @@ function start (regl, mist) {
   }));
 
   apply(fft({
-    resolution: size,
+    size: size,
     input: img,
     ping: fbos[0],
     pong: fbos[1],
@@ -61,12 +61,12 @@ function start (regl, mist) {
     filter({
       input: fbos[3],
       output: fbos[2],
-      resolution: size,
+      size: size,
       radius: radius
     });
 
     apply(fft({
-      resolution: size,
+      size: size,
       input: fbos[2],
       ping: fbos[0],
       pong: fbos[1],
