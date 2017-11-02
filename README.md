@@ -10,6 +10,8 @@ Will be published to npm after a bit more tetsing.
 
 ## Example
 
+The code below shows usage of the basic JavaScript API. The [example][./example/index.js] is perhaps more illustrative since it shows a fully worked example for a Gaussian blur. Note in particular the the return value of the JavaScript API is particularly suited for the way [regl][regl] performs multiple draw calls with a single function call.
+
 ```javascript
 var forwardTransform = fft({
   size: 8,
@@ -104,3 +106,4 @@ Returns `vec2(kx, ky)`, where `kx` and `ky` are the wavenumber of the correspond
 
 [fft]: https://en.wikipedia.org/wiki/Fast_Fourier_transform
 [dli]: https://github.com/dli/filtering
+[regl]: https://github.com/regl-project/regl

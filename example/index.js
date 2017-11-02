@@ -5,6 +5,7 @@ const css = require('insert-css');
 const path = require('path');
 const resl = require('resl');
 const regl = require('regl');
+const glsl = require('glslify');
 
 const slider = h('input', {type: 'range', min: 0, max: 512, step: 1, id: 'radius'});
 const readout = h('span', {id: 'readout'});
@@ -32,8 +33,75 @@ function start (regl, mist) {
   const size = regl._gl.canvas.width;
   const img = regl.texture({data: mist, flipY: true});
   const fbos = [0, 1, 2, 3].map(() => regl.framebuffer({colorType: 'float', radius: size}));
-  const apply = require('./apply')(regl);
-  const filter = require('./filter')(regl);
+
+  const apply = regl({
+    vert: `
+      precision mediump float;
+      attribute vec2 xy;
+      void main () {
+        gl_Position = vec4(xy, 0, 1);
+      }
+    `,
+    frag: glsl(`
+      precision highp float;
+      #pragma glslify: fft = require(../index.glsl)
+      uniform sampler2D src;
+      uniform float size, subtransformSize;
+      uniform bool horizontal, forward, normalize;
+
+      void main () {
+        gl_FragColor = fft(src, size, subtransformSize, horizontal, forward, normalize);
+      }
+    `),
+    uniforms: {
+      size: regl.prop('size'),
+      forward: regl.prop('forward'),
+      subtransformSize: regl.prop('subtransformSize'),
+      horizontal: regl.prop('horizontal'),
+      normalize: regl.prop('normalize'),
+      src: regl.prop('input'),
+    },
+    attributes: {xy: [-4, -4, 4, -4, 0, 4]},
+    framebuffer: regl.prop('output'),
+    depth: {enable: false},
+    count: 3
+  });
+
+  const filter = regl({
+    vert: `
+      precision mediump float;
+      varying vec2 uv;
+      attribute vec2 xy;
+      void main () {
+        uv = 0.5 * xy + 0.5;
+        gl_Position = vec4(xy, 0, 1);
+      }
+    `,
+    frag: glsl(`
+      precision highp float;
+      #pragma glslify: wavenumber = require(../wavenumber.glsl)
+      varying vec2 uv;
+      uniform sampler2D src;
+      uniform float size;
+      uniform float radius;
+
+      void main () {
+        vec4 col = texture2D(src, uv);
+        vec2 kxy = wavenumber(size);
+        float r = radius / size;
+        gl_FragColor = col * exp(-dot(kxy, kxy) * r * r);
+      }
+    `),
+    uniforms: {
+      size: regl.prop('size'),
+      radius: regl.prop('radius'),
+      src: regl.prop('input'),
+    },
+    attributes: {xy: [-4, -4, 4, -4, 0, 4]},
+    framebuffer: regl.prop('output'),
+    depth: {enable: false},
+    count: 3
+  });
 
   const forward = fft({
     size: size,
