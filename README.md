@@ -2,7 +2,7 @@
 
 > GLSL setup for performing a [Fast Fourier Transform][fft]
 
-This module does not interface with WebGL or have any specific peer dependencies. It only performs the setup work required to invoke the provided fragment shader that performs the Fourier transform.
+This module does not interface with WebGL or have WebGL-specific peer dependencies. It only performs the setup work required to invoke the provided fragment shader that performs the Fourier transform.
 
 ## Installation
 
