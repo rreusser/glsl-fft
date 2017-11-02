@@ -4,6 +4,10 @@
 
 This module does not interface with WebGL or have any specific peer dependencies. It only performs the setup work required to invoke the provided fragment shader that performs the Fourier transform.
 
+## Installation
+
+Will be published to npm after a bit more tetsing.
+
 ## Example
 
 ```javascript
