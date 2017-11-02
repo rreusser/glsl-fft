@@ -102,7 +102,7 @@ Returns `vec2(kx, ky)`, where `kx` and `ky` are the wavenumber of the correspond
 
 ## License
 
-&copy; Ricky Reusser 2017. Based on the [filtering example][dli] of David Li. See LICENSE for more details.
+&copy; Ricky Reusser 2017. MIT License. Based on the [filtering example][dli] of David Li. See LICENSE for more details.
 
 [fft]: https://en.wikipedia.org/wiki/Fast_Fourier_transform
 [dli]: https://github.com/dli/filtering
