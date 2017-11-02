@@ -6,7 +6,7 @@ This module does not interface with WebGL or have any specific peer dependencies
 
 ## Installation
 
-Will be published to npm after a bit more tetsing.
+Will be published to npm after a bit more testing.
 
 ## Example
 
