@@ -32,46 +32,39 @@ function start (regl, mist) {
   const size = regl._gl.canvas.width;
   const img = regl.texture({data: mist, flipY: true});
   const fbos = [0, 1, 2, 3].map(() => regl.framebuffer({colorType: 'float', radius: size}));
-
   const apply = require('./apply')(regl);
   const filter = require('./filter')(regl);
 
-  apply(fft({
+  const forward = fft({
     size: size,
     input: img,
     ping: fbos[0],
     pong: fbos[1],
-    output: fbos[3],
+    output: fbos[2],
     forward: true
-  }));
+  });
 
-  apply(fft({
+  const inverse = fft({
     size: size,
-    input: img,
+    input: fbos[0],
     ping: fbos[0],
     pong: fbos[1],
-    output: fbos[3],
-    forward: true
-  }));
+    forward: false
+  });
+
+  apply(forward);
 
   function draw () {
-    let radius = parseFloat(slider.value);
-    readout.textContent = radius;
+    readout.textContent = slider.value;
 
     filter({
-      input: fbos[3],
-      output: fbos[2],
+      input: fbos[2],
+      output: fbos[0],
       size: size,
-      radius: radius
+      radius: parseFloat(slider.value)
     });
 
-    apply(fft({
-      size: size,
-      input: fbos[2],
-      ping: fbos[0],
-      pong: fbos[1],
-      forward: false
-    }));
+    apply(inverse);
   }
 
   slider.addEventListener('input', draw);

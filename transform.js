@@ -8,24 +8,22 @@ module.exports = function (opts) {
     throw new Error('size msut be power of two');
   }
 
+  var ping = opts.ping;
+  if (opts.input === opts.pong) {
+    ping = opts.pong;
+  }
+  var pong = ping === opts.ping ? opts.pong : opts.ping;
+
   var passes = [];
   var iterations = Math.round(Math.log(opts.size) / Math.log(2)) * 2;
 
   for (var i = 0; i < iterations; i += 1) {
-    var uniforms = {};
+    var uniforms = {input: ping, output: pong};
 
     if (i === 0) {
       uniforms.input = opts.input;
-      uniforms.output = opts.ping;
     } else if (i === iterations - 1) {
-      uniforms.input = opts.ping;
       uniforms.output = opts.output;
-    } else if (i % 2 === 1) {
-      uniforms.input = opts.ping;
-      uniforms.output = opts.pong;
-    } else {
-      uniforms.input = opts.pong;
-      uniforms.output = opts.ping;
     }
 
     uniforms.forward = !!opts.forward;
@@ -35,6 +33,10 @@ module.exports = function (opts) {
     uniforms.size = opts.size;
 
     passes.push(uniforms);
+
+    var tmp = ping;
+    ping = pong;
+    pong = tmp;
   }
 
   return passes;
