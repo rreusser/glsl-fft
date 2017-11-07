@@ -14,7 +14,7 @@ $ npm install glsl-fft
 
 ### What does it compute?
 
-This function computes the 2D [Fast Fourier Transform][fft] of two complex input matrices contained in a single four-channel floating point WebGL texture. The red and green channels contain the real and imaginary components of the first matrix, while the blue and alpha channels contain the real and imaginary components of the second matrix. The results match and are tested against [ndarray-fft][ndarray-fft].
+This shader computes the 2D [Fast Fourier Transform][fft] of two complex input matrices contained in a single four-channel floating point WebGL texture. The red and green channels contain the real and imaginary components of the first matrix, while the blue and alpha channels contain the real and imaginary components of the second matrix. The results match and are tested against [ndarray-fft][ndarray-fft].
 
 ### What is required?
 
