@@ -22,7 +22,7 @@ This module is designed for use with [glslify][glslify], though it's not require
 
 ### Is it fast?
 
-Not particularly. Could be way better. Correctness first, then optimization.
+As far as fast Fourier transforms go, it's not particularly optimized, though it's much faster than transferring data to and from the GPU each time you need to transform.
 
 ## Example
 
