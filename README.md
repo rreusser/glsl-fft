@@ -2,8 +2,6 @@
 
 > GLSL setup for performing a [Fast Fourier Transform][fft]
 
-This module does not interface with WebGL or have WebGL-specific peer dependencies. It only performs the setup work required to invoke the provided fragment shader that performs the Fourier transform.
-
 ## Installation
 
 ```sh
@@ -17,6 +15,8 @@ $ npm install glsl-fft
 This shader computes the 2D [Fast Fourier Transform][fft] of two complex input matrices contained in a single four-channel floating point WebGL texture. The red and green channels contain the real and imaginary components of the first matrix, while the blue and alpha channels contain the real and imaginary components of the second matrix. The results match and are tested against [ndarray-fft][ndarray-fft].
 
 ### What is required?
+
+This module does not interface with WebGL or have WebGL-specific peer dependencies. It only performs the setup work required to invoke the provided fragment shader that performs the Fourier transform.
 
 This module is designed for use with [glslify][glslify], though it's not required. It also works relatively effortlessly with [regl][regl], though that's also not required. At minimum, you'll need to use this with no less than two WebGL framebuffers, including input, output, and two buffers to ping-pong back and forth between during the passes. The ping-pong framebuffers may include the input and output framebuffers as long as the parity of the number of steps permits the final output without requiring an extra copy operation.
 
