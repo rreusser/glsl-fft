@@ -6,6 +6,7 @@ const path = require('path');
 const resl = require('resl');
 const regl = require('regl');
 const glsl = require('glslify');
+const mobile = require('is-mobile');
 
 const slider = h('input', {type: 'range', min: 0, max: 512, step: 1, id: 'radius'});
 const readout = h('span', {id: 'readout'});
@@ -34,7 +35,7 @@ function start (regl, mist) {
   const width = regl._gl.canvas.width;
   const height = regl._gl.canvas.height;
   const img = regl.texture({data: mist, flipY: true});
-  const type = regl.hasExtension('oes_texture_float') ? 'float' : 'half float';
+  const type = (regl.hasExtension('oes_texture_float') && !mobile) ? 'float' : 'half float';
   const fbos = [0, 1, 2].map(() => regl.framebuffer({colorType: type, width: width, height: height}));
 
   const apply = regl({
@@ -47,7 +48,7 @@ function start (regl, mist) {
     `,
     frag: glsl(`
       precision highp float;
-      #pragma glslify: fft = require(../index.glsl)
+      #pragma glslify: fft = require(../)
       uniform sampler2D src;
       uniform vec2 resolution;
       uniform float subtransformSize, normalization;
