@@ -20,6 +20,10 @@ This function computes the 2D [Fast Fourier Transform][fft] of two complex input
 
 This module is designed for use with [glslify][glslify], though it's not required. It also works relatively effortlessly with [regl][regl], though that's also not required. At minimum, you'll need to use this with no less than two WebGL framebuffers, including input, output, and two buffers to ping-pong back and forth between during the passes. The ping-pong framebuffers may include the input and output framebuffers as long as the parity of the number of steps permits the final output without requiring an extra copy operation.
 
+### Is it fast?
+
+Not particularly. Could be way better. Correctness first, then optimization.
+
 ## Example
 
 The code below shows usage of the basic JavaScript API. The [example](./example/index.js) is perhaps more illustrative since it shows a fully worked example for a Gaussian blur. Note in particular the the return value of the JavaScript API is particularly suited for the way [regl][regl] performs multiple draw calls with a single function call, though [regl][regl] is certainly not reqired in order to use this module.
