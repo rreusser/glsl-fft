@@ -113,8 +113,7 @@ function start (regl, mist) {
     ping: fbos[0],
     pong: fbos[1],
     output: fbos[0],
-    forward: true,
-    normalization: 'inverse'
+    forward: true
   });
 
   const inverse = fft({
@@ -123,8 +122,7 @@ function start (regl, mist) {
     input: fbos[1],
     ping: fbos[1],
     pong: fbos[2],
-    forward: false,
-    normalization: 'inverse'
+    forward: false
   });
 
   apply(forward);
