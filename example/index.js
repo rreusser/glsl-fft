@@ -1,6 +1,6 @@
 const h = require('h');
 const fs = require('fs');
-const fft = require('../transform');
+const fft = require('../');
 const css = require('insert-css');
 const path = require('path');
 const resl = require('resl');
@@ -24,15 +24,18 @@ resl({
       container: root,
       attributes: {antialias: false},
       onDone: require('fail-nicely')(regl => start(regl, mist)),
-      extensions: ['oes_texture_float']
+      optionalExtensions: ['oes_texture_float'],
+      extensions: ['oes_texture_half_float']
     })
   }
 })
 
 function start (regl, mist) {
-  const size = regl._gl.canvas.width;
+  const width = regl._gl.canvas.width;
+  const height = regl._gl.canvas.height;
   const img = regl.texture({data: mist, flipY: true});
-  const fbos = [0, 1, 2, 3].map(() => regl.framebuffer({colorType: 'float', radius: size}));
+  const type = regl.hasExtension('oes_texture_float') ? 'float' : 'half float';
+  const fbos = [0, 1, 2].map(() => regl.framebuffer({colorType: type, width: width, height: height}));
 
   const apply = regl({
     vert: `
@@ -46,19 +49,20 @@ function start (regl, mist) {
       precision highp float;
       #pragma glslify: fft = require(../index.glsl)
       uniform sampler2D src;
-      uniform float size, subtransformSize;
-      uniform bool horizontal, forward, normalize;
+      uniform vec2 resolution;
+      uniform float subtransformSize, normalization;
+      uniform bool horizontal, forward;
 
       void main () {
-        gl_FragColor = fft(src, size, subtransformSize, horizontal, forward, normalize);
+        gl_FragColor = fft(src, resolution, subtransformSize, horizontal, forward, normalization);
       }
     `),
     uniforms: {
-      size: regl.prop('size'),
+      resolution: regl.prop('resolution'),
       forward: regl.prop('forward'),
       subtransformSize: regl.prop('subtransformSize'),
       horizontal: regl.prop('horizontal'),
-      normalize: regl.prop('normalize'),
+      normalization: regl.prop('normalization'),
       src: regl.prop('input'),
     },
     attributes: {xy: [-4, -4, 4, -4, 0, 4]},
@@ -79,21 +83,20 @@ function start (regl, mist) {
     `,
     frag: glsl(`
       precision highp float;
-      #pragma glslify: wavenumber = require(../wavenumber.glsl)
+      #pragma glslify: wavenumber = require(../wavenumber)
       varying vec2 uv;
       uniform sampler2D src;
-      uniform float size;
-      uniform float radius;
+      uniform float width, height, radius;
 
       void main () {
         vec4 col = texture2D(src, uv);
-        vec2 kxy = wavenumber(size);
-        float r = radius / size;
-        gl_FragColor = col * exp(-dot(kxy, kxy) * r * r);
+        vec2 kxy = wavenumber(width, height);
+        gl_FragColor = col * exp(-dot(kxy, kxy) * radius * radius);
       }
     `),
     uniforms: {
-      size: regl.prop('size'),
+      width: regl.prop('width'),
+      height: regl.prop('height'),
       radius: regl.prop('radius'),
       src: regl.prop('input'),
     },
@@ -104,20 +107,24 @@ function start (regl, mist) {
   });
 
   const forward = fft({
-    size: size,
+    width: width,
+    height: height,
     input: img,
     ping: fbos[0],
     pong: fbos[1],
-    output: fbos[2],
-    forward: true
+    output: fbos[0],
+    forward: true,
+    normalization: 'inverse'
   });
 
   const inverse = fft({
-    size: size,
-    input: fbos[0],
-    ping: fbos[0],
-    pong: fbos[1],
-    forward: false
+    width: width,
+    height: height,
+    input: fbos[1],
+    ping: fbos[1],
+    pong: fbos[2],
+    forward: false,
+    normalization: 'inverse'
   });
 
   apply(forward);
@@ -126,9 +133,10 @@ function start (regl, mist) {
     readout.textContent = slider.value;
 
     filter({
-      input: fbos[2],
-      output: fbos[0],
-      size: size,
+      input: fbos[0],
+      output: fbos[1],
+      width: width,
+      height: height,
       radius: parseFloat(slider.value)
     });
 
