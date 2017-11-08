@@ -11,7 +11,7 @@ module.exports = function (opts) {
 
   opts = opts || {};
   opts.forward = opts.forward === undefined ? true : opts.forward;
-  opts.normalization = opts.normalization === undefined ? 'split' : opts.normalization;
+  opts.splitNormalization = opts.splitNormalization === undefined ? true : opts.splitNormalization;
 
   function swap () {
     tmp = ping;
@@ -74,7 +74,7 @@ module.exports = function (opts) {
     }
 
     if (i === 0) {
-      if (opts.normalization === 'split') {
+      if (!!opts.splitNormalization) {
         uniforms.normalization = 1.0 / Math.sqrt(width * height);
       } else if (!opts.forward) {
         uniforms.normalization = 1.0 / width / height;

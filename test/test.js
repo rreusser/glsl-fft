@@ -24,7 +24,7 @@ test('throws if size is not a power of two', function (t) {
       pong: 'c',
       output: 'd',
       forward: true,
-      normalization: 'inverse'
+      splitNormalization: false
     });
   }, /must be a power of two/);
 
@@ -39,7 +39,7 @@ test('throws neither size nor height+width are provided', function (t) {
       pong: 'c',
       output: 'd',
       forward: true,
-      normalization: 'inverse',
+      splitNormalization: false
     });
   }, /either size or both width and height/);
 
@@ -54,7 +54,7 @@ test('forward fft', function (t) {
     pong: 'c',
     output: 'd',
     forward: true,
-    normalization: 'inverse'
+    splitNormalization: false
   });
 
   t.deepEqual(fft, [
@@ -81,7 +81,7 @@ test('forward fft avoids input framebuffer collisions', function (t) {
     pong: 'a',
     output: 'c',
     forward: true,
-    normalization: 'inverse'
+    splitNormalization: false
   });
 
   t.deepEqual(fft, [
@@ -108,7 +108,7 @@ test('forward fft avoids output framebuffer collisions', function (t) {
     pong: 'c',
     output: 'c',
     forward: true,
-    normalization: 'inverse'
+    splitNormalization: false
   });
 
   t.deepEqual(fft, [
@@ -136,7 +136,7 @@ test('detects input+output framebuffer collisions', function (t) {
       pong: 'a',
       output: 'b',
       forward: true,
-      normalization: 'inverse'
+      splitNormalization: false
     });
   }, /not enough framebuffers to compute/);
 
@@ -152,7 +152,7 @@ test('non-square forward fft', function (t) {
     pong: 'c',
     output: 'd',
     forward: true,
-    normalization: 'inverse'
+    splitNormalization: false
   });
 
   t.deepEqual(fft, [
@@ -176,7 +176,7 @@ test('inverse fft', function (t) {
     pong: 'c',
     output: 'd',
     forward: false,
-    normalization: 'inverse'
+    splitNormalization: false
   });
 
   t.deepEqual(fft, [
@@ -209,7 +209,7 @@ test('regl', function (t) {
         t.end();
       }
 
-      var apply = regl({
+      var applyFFT = regl({
         vert: `
           precision mediump float;
           attribute vec2 xy;
@@ -250,18 +250,93 @@ test('regl', function (t) {
         count: 3
       });
 
-      function compare (A, B, tol) {
-        for (var i = 0; i < A.length; i++) {
-          if (!almostEqual(A[i], B[i], tol, tol)) {
-            t.notOk(i + ': ' + A[i] + ' ~ ' + B[i] + ' (' + tol + ')');
+      var drawWavenumber = regl({
+        vert: `
+          precision mediump float;
+          attribute vec2 xy;
+          varying vec2 uv;
+          void main () {
+            uv = 0.5 * xy + 0.5;
+            gl_Position = vec4(xy, 0, 1);
+          }
+        `,
+        frag: glsl(`
+          precision highp float;
+          #pragma glslify: wavenumber = require(../wavenumber)
+          varying vec2 uv;
+          uniform vec2 resolution;
+
+          void main () {
+            gl_FragColor = vec4(wavenumber(resolution), 0, 0);
+          }
+        `),
+        uniforms: {resolution: regl.prop('resolution')},
+        attributes: {xy: [-4, -4, 4, -4, 0, 4]},
+        framebuffer: regl.prop('output'),
+        depth: {enable: false},
+        count: 3
+      });
+
+      function compare (actual, expected, tol) {
+        for (var i = 0; i < expected.length; i++) {
+          if (!almostEqual(expected[i], actual[i], tol, tol)) {
+            t.notOk(i + ': ' + actual[i] + ' (actual) !~ ' + expected[i] + ' (expected) (tol=' + tol + ')');
             return false;
           }
         }
         return true;
       }
 
-      function test (direction, width, height, tol) {
-        var input = new Array(width * height * 4).fill(0).map(i => random())
+      function fftfreq (i, n, dx) {
+        return ((i < Math.floor((n + 1) / 2)) ? i / (n * dx) : -(n - i) / (n * dx)) * 2 * Math.PI;
+      }
+
+      function testWavenumber (width, height) {
+        var expected = new Array(width * height * 4).fill(0);
+        for (var i = 0; i < width; i++) {
+          for (var j = 0; j < height; j++) {
+            var idx = 4 * (i * height + j);
+            expected[idx] = fftfreq(i, width, 1.0);
+            expected[idx + 1] = fftfreq(j, height, 1.0);
+            expected[idx + 2] = 0.0;
+            expected[idx + 3] = 0.0;
+          }
+        }
+
+        var ndExpected = ndarray(expected, [width, height, 4]);
+        //console.log('kx = \n' + show(ndExpected.pick(null, null, 0)) + '\n');
+        //console.log('ky = \n' + show(ndExpected.pick(null, null, 1)) + '\n');
+
+        var fbo = regl.framebuffer({
+          colorType: 'float',
+          colorFormat: 'rgba',
+          width: width,
+          height: height
+        });
+
+        drawWavenumber({
+          resolution: [1 / width, 1 / height],
+          output: fbo
+        });
+
+        var ndOut;
+        fbo.use(function () {
+          var data = regl.read();
+          ndOut = ndarray(data, [height, width, 4]).transpose(1, 0);
+
+          //console.log('kx:\n' + show(ndOut.pick(null, null, 0)) + '\n');
+          //console.log('ky:\n' + show(ndOut.pick(null, null, 1)) + '\n');
+
+          var clone = pool.clone(ndOut)
+          t.ok(compare(clone.data, ndExpected.data, 1e-4), 'wavenumber: ' + width + ' x ' + height);
+          pool.free(clone);
+        });
+
+        fbo.destroy();
+      }
+
+      function testFFT (direction, width, height, tol) {
+        var input = new Array(width * height * 4).fill(0).map(random);
 
         var A = ndarray(new Float32Array(input), [width, height, 2, 2]);
 
@@ -284,7 +359,7 @@ test('regl', function (t) {
         });
 
         var fft = transform({
-          normalization: 'inverse',
+          splitNormalization: false,
           width: width,
           height: height,
           input: fbos[0],
@@ -294,7 +369,7 @@ test('regl', function (t) {
           forward: direction > 0 ? true : false
         });
 
-        apply(fft);
+        applyFFT(fft);
 
         var ndOut;
         fbos[2].use(function () {
@@ -303,7 +378,7 @@ test('regl', function (t) {
 
           // Flatten this ndarray so we can compare internal data:
           var clone = pool.clone(ndOut)
-          t.ok(compare(A.data, clone.data, tol), (direction > 0 ? 'forward ' : 'reverse ') + width + ' x ' + height);
+          t.ok(compare(clone.data, A.data, tol), (direction > 0 ? 'forward ' : 'inverse ') + width + ' x ' + height);
           pool.free(clone);
         });
 
@@ -317,46 +392,55 @@ test('regl', function (t) {
         });
       }
 
-      test(1, 2, 2, 1e-5);
-      test(1, 4, 2, 1e-5);
-      test(1, 8, 2, 1e-4);
-      test(1, 16, 2, 1e-4);
-      test(1, 32, 2, 1e-3);
+      testFFT(1, 2, 2, 1e-5);
+      testFFT(1, 4, 2, 1e-5);
+      testFFT(1, 8, 2, 1e-4);
+      testFFT(1, 16, 2, 1e-4);
+      testFFT(1, 32, 2, 1e-3);
 
-      test(1, 1, 8, 1e-5);
-      test(1, 2, 8, 1e-5);
-      test(1, 4, 8, 1e-4);
-      test(1, 8, 8, 1e-4);
-      test(1, 16, 8, 1e-4);
-      test(1, 32, 8, 1e-3);
+      testFFT(1, 1, 8, 1e-5);
+      testFFT(1, 2, 8, 1e-5);
+      testFFT(1, 4, 8, 1e-4);
+      testFFT(1, 8, 8, 1e-4);
+      testFFT(1, 16, 8, 1e-4);
+      testFFT(1, 32, 8, 1e-3);
 
-      test(-1, 1, 8, 1e-5);
-      test(-1, 2, 8, 1e-5);
-      test(-1, 4, 8, 1e-5);
-      test(-1, 8, 8, 1e-4);
-      test(-1, 16, 8, 1e-4);
-      test(-1, 32, 8, 1e-3);
+      testFFT(-1, 1, 8, 1e-5);
+      testFFT(-1, 2, 8, 1e-5);
+      testFFT(-1, 4, 8, 1e-5);
+      testFFT(-1, 8, 8, 1e-4);
+      testFFT(-1, 16, 8, 1e-4);
+      testFFT(-1, 32, 8, 1e-3);
 
-      test(1, 1, 8, 1e-5);
-      test(1, 2, 8, 1e-5);
-      test(1, 4, 8, 1e-5);
-      test(1, 8, 8, 1e-4);
-      test(1, 16, 8, 1e-4);
-      test(1, 32, 8, 1e-3);
+      testFFT(1, 1, 8, 1e-5);
+      testFFT(1, 2, 8, 1e-5);
+      testFFT(1, 4, 8, 1e-5);
+      testFFT(1, 8, 8, 1e-4);
+      testFFT(1, 16, 8, 1e-4);
+      testFFT(1, 32, 8, 1e-3);
 
-      test(-1, 1, 8, 1e-5);
-      test(-1, 2, 8, 1e-5);
-      test(-1, 4, 8, 1e-5);
-      test(-1, 8, 8, 1e-4);
-      test(-1, 16, 8, 1e-4);
-      test(-1, 32, 8, 1e-3);
+      testFFT(-1, 1, 8, 1e-5);
+      testFFT(-1, 2, 8, 1e-5);
+      testFFT(-1, 4, 8, 1e-5);
+      testFFT(-1, 8, 8, 1e-4);
+      testFFT(-1, 16, 8, 1e-4);
+      testFFT(-1, 32, 8, 1e-3);
 
-      test(1, 32, 64, 1e-2);
-      test(-1, 32, 64, 1e-4);
-      test(1, 64, 32, 1e-2);
-      test(-1, 64, 32, 1e-5);
-      test(1, 64, 64, 1e-2);
-      test(-1, 64, 64, 1e-5);
+      testFFT(1, 32, 64, 1e-2);
+      testFFT(-1, 32, 64, 1e-4);
+      testFFT(1, 64, 32, 1e-2);
+      testFFT(-1, 64, 32, 1e-5);
+      testFFT(1, 64, 64, 1e-2);
+      testFFT(-1, 64, 64, 1e-5);
+
+
+      for (i = 0; i < 6; i++) {
+        for (j = 0; j < 6; j++) {
+          testWavenumber(Math.pow(2, i), Math.pow(2, j));
+        }
+      }
+
+      testWavenumber(128, 128);
 
       regl.destroy();
 

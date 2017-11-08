@@ -8,11 +8,11 @@ body {
   height: 512px;
 }
 
-#radius {
+input[type=range] {
   width: 400px;
 }
 
-#readout {
+.readout {
   width: 50px;
   display: inline-block;
 }

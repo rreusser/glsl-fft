@@ -1,7 +1,7 @@
 {
   "name": "glsl-fft",
   "version": "1.0.0",
-  "description": "GLSL setup for performing a Fast Fourier Transform",
+  "description": "GLSL setup for performing a Fast Fourier Transform of two complex matrices",
   "main": "index.js",
   "directories": {
     "test": "test"

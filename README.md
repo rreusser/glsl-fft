@@ -1,6 +1,6 @@
 # glsl-fft
 
-> GLSL setup for performing a [Fast Fourier Transform][fft]
+> GLSL setup for a [Fast Fourier Transform][fft] of two complex matrices
 
 ## Installation
 
@@ -8,29 +8,12 @@
 $ npm install glsl-fft
 ```
 
-## Usage 
-
-### What does it compute?
-
-This shader computes the 2D [Fast Fourier Transform][fft] of two complex input matrices contained in a single four-channel floating point (or half float) WebGL texture. The red and green channels contain the real and imaginary components of the first matrix, while the blue and alpha channels contain the real and imaginary components of the second matrix. The results match and are tested against [ndarray-fft][ndarray-fft].
-
-### What is required?
-
-This module does not interface with WebGL or have WebGL-specific peer dependencies. It only performs the setup work required to invoke the provided fragment shader that performs the Fourier transform.
-
-This module is designed for use with [glslify][glslify], though it's not required. It also works relatively effortlessly with [regl][regl], though that's also not required. At minimum, you'll need to use this with no less than two WebGL framebuffers, including input, output, and two buffers to ping-pong back and forth between during the passes. The ping-pong framebuffers may include the input and output framebuffers as long as the parity of the number of steps permits the final output without requiring an extra copy operation.
-
-### Is it fast?
-
-As far as fast Fourier transforms go, it's not particularly optimized, though it's much faster than transferring data to and from the GPU each time you need to transform.
-
 ## Example
-
-The code below shows usage of the basic JavaScript API. The [example](./example/index.js) is perhaps more illustrative since it shows a fully worked example for a Gaussian blur. Note in particular the the return value of the JavaScript API is particularly suited for the way [regl][regl] performs multiple draw calls with a single function call, though [regl][regl] is certainly not reqired in order to use this module.
 
 ```javascript
 var fft = require('glsl-fft');
 
+// Set up a forward transform:
 var forwardTransform = fft({
   width: 4,
   height: 2,
@@ -39,9 +22,10 @@ var forwardTransform = fft({
   pong: 'c',
   output: 'd',
   forward: true,
-  normalization: 'inverse'
+  splitNormalization: false
 });
 
+// Output is a list of passes:
 // => [
 //  {input: 'a', output: 'c', horizontal: true, forward: true, resolution: [ 0.25, 0.5 ], normalization: 1, subtransformSize: 2},
 //  {input: 'c', output: 'b', horizontal: true, forward: true, resolution: [ 0.25, 0.5 ], normalization: 1, subtransformSize: 4},
@@ -49,7 +33,7 @@ var forwardTransform = fft({
 // ]
 ```
 
-An example GLSL fragment shader that performs the FFT given the above passes as uniforms is:
+Usage of the GLSL fragment shader using the above parameters as uniforms:
 
 ```glsl
 precision highp float;
@@ -66,7 +50,23 @@ void main () {
 }
 ```
 
-See [example/index.js](./example/index.js) for a fully worked [Gaussian blur][gaussian] example using [regl][regl].
+See [example/index.js](./example/index.js) for a fully worked [angular Gaussian blur][gaussian] example using [regl][regl].
+
+## Usage 
+
+### What does it compute?
+
+This shader computes the 2D [Fast Fourier Transform][fft] of two complex input matrices contained in a single four-channel floating point (or half float) WebGL texture. The red and green channels contain the real and imaginary components of the first matrix, while the blue and alpha channels contain the real and imaginary components of the second matrix. The results match and are tested against [ndarray-fft][ndarray-fft].
+
+### What is required?
+
+This module does not interface with WebGL or have WebGL-specific peer dependencies. It only performs the setup work and exposes a fragment shader that performs the Fourier transform.
+
+This module is designed for use with [glslify][glslify], though it's not required. It also works relatively effortlessly with [regl][regl], though that's also not required. At minimum, you'll need no less than two float or half-float WebGL framebuffers, including input, output, and two buffers to ping-pong back and forth between during the passes. The ping-pong framebuffers may include the input and output framebuffers as long as the parity of the number of steps permits the final output without requiring an extra copy operation.
+
+### Is it fast?
+
+As far as fast Fourier transforms go, it's not particularly optimized, though it's much faster than transferring data to and from the GPU each time you need to compute a Fourier transform.
 
 ## JavaScript API
 
@@ -82,7 +82,7 @@ Perform the setup work required to use the FFT kernel in the fragment shader, `i
 - `size` (`Number`): size of the input, equal to the `width` and `height`. Must be a power of two.
 - `width` (`Number`): width of the input. Must be a power of two. Ignored if `size` is specified.
 - `height` (`Number`): height of the input. Must be a power of two. Ignored if `size` is specifid.
-- `normalization`: `'split' | 'inverse'`: If `'split'`, normalize by `1 / √(width * height)` on both the forward and inverse transforms. If `'inverse'`, normalize by `1 / (width * height)` on only the inverse transform. Default value is `'split'`. Provided to avoid catastrophic overflow which may occur during the forward transform with half-float textures. One-way transforms will match [ndarray-fft][ndarray-fft] only if normalization mode is `'inverse'`.
+- `splitNormalization`: (`Boolean`): If `true`, normalize by `1 / √(width * height)` on both the forward and inverse transforms. If `false`, normalize by `1 / (width * height)` on only the inverse transform. Default is `true`. Provided to avoid catastrophic overflow during the forward transform when using half-float textures. One-way transforms will match [ndarray-fft][ndarray-fft] only if `false`.
 
 Returns a list of passes. Each object in the list is a set of parameters that must either be used to bind the correct framebuffers or passed as uniforms to the fragment shader.
 
@@ -94,9 +94,15 @@ Returns a list of passes. Each object in the list is a set of parameters that mu
 Returns the `gl_FragColor` in order to perform a single pass of the FFT comptuation. Uniforms map directly to the output of the JavaScript setup function, with the exception of `src` which is a `sampler2D` for the input framebuffer or texture.
 
 ### `#pragma glslify: wavenumber = require(glsl-fft/wavenumber)`
-### `vec2 wavenumber(float size)`
+### `vec2 wavenumber(vec2 resolution)`
+### `vec2 wavenumber(vec2 resolution, float dxy)`
+### `vec2 wavenumber(vec2 resolution, vec2 dxy)`
 
-Returns `vec2(kx, ky)`, where `kx` and `ky` are the wavenumber of the corresponding fragment of the Fourier Transform. Uses `gl_FragCoord` directly.
+Parameters are:
+- `resolution`: a `vec2` containing `1 / width` and `1 / height`.
+- `dxy` (optional): Either a float representing the sample spacing in either direction, or a `vec2` representing the sample spacing in the horizontal and vertical directions, respectively.
+
+Returns `vec2(kx, ky)`, where `kx` and `ky` are the angular wavenumbers of the corresponding texel of the Fourier Transformed data.
 
 ## License
 

@@ -8,9 +8,14 @@ const regl = require('regl');
 const glsl = require('glslify');
 const mobile = require('is-mobile');
 
-const slider = h('input', {type: 'range', min: 0, max: 512, step: 1, id: 'radius'});
-const readout = h('span', {id: 'readout'});
-const controls = h('div', [h('label', 'Radius:', {for: 'radius'}), slider, readout]);
+const radiusSlider = h('input', {type: 'range', min: 0, max: 50, step: 0.1, id: 'radius', value: 10});
+const angleSlider = h('input', {type: 'range', min: 0, max: 180, step: 1, id: 'angle', value: 0});
+const radiusReadout = h('span', {class: 'readout'});
+const angleReadout = h('span', {class: 'readout'});
+const controls = h('div', [
+  h('div', [h('label', 'Radius:', {for: 'radius'}), radiusSlider, radiusReadout]),
+  h('div', [h('label', 'Angle:', {for: 'angle'}), angleSlider, angleReadout]),
+]);
 const root = h('div', {id: 'root'});
 document.body.appendChild(root);
 document.body.appendChild(controls);
@@ -87,19 +92,21 @@ function start (regl, mist) {
       #pragma glslify: wavenumber = require(../wavenumber)
       varying vec2 uv;
       uniform sampler2D src;
-      uniform float width, height, radius;
+      uniform vec2 resolution, e1;
+      uniform float radius;
 
       void main () {
         vec4 col = texture2D(src, uv);
-        vec2 kxy = wavenumber(width, height);
-        gl_FragColor = col * exp(-dot(kxy, kxy) * radius * radius);
+        vec2 kxy = wavenumber(resolution);
+        float k1 = dot(e1, kxy) * radius;
+        gl_FragColor = col * exp(-k1 * k1 * 0.5);
       }
     `),
     uniforms: {
-      width: regl.prop('width'),
-      height: regl.prop('height'),
+      resolution: regl.prop('resolution'),
       radius: regl.prop('radius'),
       src: regl.prop('input'),
+      e1: regl.prop('e1'),
     },
     attributes: {xy: [-4, -4, 4, -4, 0, 4]},
     framebuffer: regl.prop('output'),
@@ -129,19 +136,22 @@ function start (regl, mist) {
   apply(forward);
 
   function draw () {
-    readout.textContent = slider.value;
+    radiusReadout.textContent = radiusSlider.value;
+    angleReadout.textContent = angleSlider.value;
+    var theta = parseFloat(angleSlider.value) * Math.PI / 180.0;
 
     filter({
       input: fbos[0],
       output: fbos[1],
-      width: width,
-      height: height,
-      radius: parseFloat(slider.value)
+      resolution: [1 / width, 1 / height],
+      radius: parseFloat(radiusSlider.value),
+      e1: [Math.cos(theta), Math.sin(theta)]
     });
 
     apply(inverse);
   }
 
-  slider.addEventListener('input', draw);
+  radiusSlider.addEventListener('input', draw);
+  angleSlider.addEventListener('input', draw);
   draw();
 }
