@@ -64,6 +64,8 @@ This module does not interface with WebGL or have WebGL-specific peer dependenci
 
 This module is designed for use with [glslify][glslify], though it's not required. It also works relatively effortlessly with [regl][regl], though that's also not required. At minimum, you'll need no less than two float or half-float WebGL framebuffers, including input, output, and two buffers to ping-pong back and forth between during the passes. The ping-pong framebuffers may include the input and output framebuffers as long as the parity of the number of steps permits the final output without requiring an extra copy operation.
 
+The size of the textures must be a power of two, but not necessarily square.
+
 ### Is it fast?
 
 As far as fast Fourier transforms go, it's not particularly optimized, though it's much faster than transferring data to and from the GPU each time you need to compute a Fourier transform.
