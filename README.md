@@ -21,8 +21,7 @@ var forwardTransform = fft({
   ping: 'b',
   pong: 'c',
   output: 'd',
-  forward: true,
-  splitNormalization: false
+  forward: true
 });
 
 // Output is a list of passes:
