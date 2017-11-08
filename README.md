@@ -50,7 +50,7 @@ void main () {
 }
 ```
 
-See [example/index.js](./example/index.js) for a fully worked [angular Gaussian blur][gaussian] example using [regl][regl].
+See [example/index.js](./example/index.js) for a fully worked angular [Gaussian blur][gaussian] example using [regl][regl].
 
 ## Usage 
 
