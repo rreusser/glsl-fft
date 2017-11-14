@@ -22,7 +22,6 @@ var forwardTransform = fft({
   pong: 'c',
   output: 'd',
   forward: true,
-  splitNormalization: false
 });
 
 // Output is a list of passes:
@@ -106,6 +105,11 @@ Parameters are:
 
 Returns `vec2(kx, ky)`, where `kx` and `ky` are the angular wavenumbers of the corresponding texel of the Fourier Transformed data.
 
+## See also
+
+- [ndarray-fft][ndarray-fft]
+- [glsl-rfft][glsl-rfft]
+
 ## License
 
 &copy; Ricky Reusser 2017. MIT License. Based on the [filtering example][dli] of David Li. See LICENSE for more details.
@@ -116,3 +120,4 @@ Returns `vec2(kx, ky)`, where `kx` and `ky` are the angular wavenumbers of the c
 [regl]: https://github.com/regl-project/regl
 [ndarray-fft]: https://github.com/scijs/ndarray-fft
 [gaussian]: https://en.wikipedia.org/wiki/Gaussian_blur
+[glsl-rfft]: https://github.com/rreusser/glsl-rfft
