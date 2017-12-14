@@ -67,7 +67,7 @@ The size of the textures must be a power of two, but not necessarily square.
 
 ### Is it fast?
 
-As far as fast Fourier transforms go, it's not particularly optimized, though it's much faster than transferring data to and from the GPU each time you need to compute a Fourier transform.
+As far as fast Fourier transforms go, it's not really optimized at all, though it's faster than transferring data to and from the GPU each time you need to compute a Fourier transform. The biggest strike against it is the number of passes. That could be optimized, but I don't currently have the time. Would gladly accept a PR though.
 
 ## JavaScript API
 
