@@ -1,6 +1,6 @@
 {
   "name": "glsl-fft",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "GLSL setup for performing a Fast Fourier Transform of two complex matrices",
   "main": "index.js",
   "directories": {
@@ -26,7 +26,6 @@
   "license": "MIT",
   "devDependencies": {
     "almost-equal": "^1.1.0",
-    "bankai": "^9.0.0-rc9",
     "brfs": "^1.4.3",
     "budo": "^10.0.4",
     "dependency-check": "^2.9.1",
@@ -42,7 +41,6 @@
     "insert-css": "^2.0.0",
     "iota-array": "^1.0.0",
     "is-mobile": "^0.2.2",
-    "is-power-of-two": "^1.0.0",
     "ndarray": "^1.0.18",
     "ndarray-fft": "^1.0.3",
     "ndarray-scratch": "^1.2.0",
@@ -61,5 +59,8 @@
   },
   "github-corner": {
     "url": "https://github.com/rreusser/glsl-fft"
+  },
+  "dependencies": {
+    "is-power-of-two": "^1.0.0"
   }
 }
